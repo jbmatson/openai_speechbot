@@ -1,13 +1,13 @@
 import pyaudio
 import wave
 import webrtcvad
-import requests
+#mport requests
 import os
 import json
 from openai import OpenAI
 
 # A recommended way to store the key is in an environment variable. For this demo, I am storing in a file.
-key_location = 'C:\Work\Pluralsight\openai_apikey.txt'
+key_location = 'C:\speechbot\openai_apikey.txt'
 
 with open(key_location, 'r') as file:
    api_key = file.readline().strip()
@@ -23,11 +23,15 @@ vad.set_mode(3)  # You can experiment with different modes (1-3) for sensitivity
 # Configure the audio recording parameters
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
-RATE = 16000  # Samples per second
-CHUNK = 320
+RATE = 16000         # Samples per second
+CHUNK = 320          # chunk size
 RECORD_SECONDS = 10  # Maximum length of each audio segment
 WAVE_OUTPUT_FILENAME = "audio.wav"
-SILENCE_LIMIT = 2
+SILENCE_LIMIT = 2    # Number of seconds of silence/non-speech before we assume user has stopped talking
+
+# WebRTC VAD only accepts 16-bit mono PCM audio, sampled at 8000, 16000, 32000 or 48000 Hz. A frame must be either 10, 20, or 30 ms in duration.
+# For example, if your sample rate is 16000 Hz, then the only allowed frame/chunk sizes are 16000 * ({10,20,30} / 1000) = 160, 320 or 480 samples. 
+# Since each sample is 2 bytes (16 bits), the only allowed frame/chunk sizes are 320, 640, or 960 bytes.
 
 # Create a PyAudio stream for recording
 audio = pyaudio.PyAudio()
@@ -56,10 +60,13 @@ while True:
                   silence_threshold = 0
          continue
       elif not is_speech and in_speech:
+         # check if user has been quiet long enough to assume they have stopped talking
          if silence_threshold < SILENCE_LIMIT * (RATE / CHUNK):
+            # not yet - wait longer
             silence_threshold += 1
             continue
          else:
+            # silence has reached limit - process and send the recording for transcription
             in_speech = False
             if audio_data:
                # Save the audio segment to a WAV file
@@ -96,6 +103,12 @@ while True:
                os.remove(WAVE_OUTPUT_FILENAME)
                   
                audio_data = b""
+
+               # TODO: Send the transcription text to ChatGPT to get a response
+
+               # TODO: Send the response to a text-to-speect service, stream the response to audio output
+
+
    except KeyboardInterrupt:
       break
 
