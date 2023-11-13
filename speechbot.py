@@ -111,7 +111,7 @@ def main():
                         wf.setframerate(RATE)
                         wf.writeframes(audio_data)
                         wf.close()
-                    
+
                     # Send the audio segment to OpenAI Whisper for speech recognition
                     audio_file = open(WAVE_OUTPUT_FILENAME, 'rb')
 
@@ -143,21 +143,9 @@ def main():
 
                     response_text = response.choices[0].message.content
 
+                    # Send the response to ElevenLabs text-to-speect service,
+                    # stream the response to audio output
                     speak_string("assistant", response_text)
-                    # print("Assistant: " + response_text)
-                    # chat_messages.append({"role": "assistant", "content": response_text})
-
-                    # # Send the response to ElevenLabs text-to-speect service,
-                    # #  stream the response to audio output
-
-                    # audio_stream = generate(
-                    #    text=response_text,
-                    #    voice="Rachel",
-                    #    model="eleven_multilingual_v2",
-                    #    stream=True
-                    # )
-
-                    # stream(audio_stream)
 
                     if transcription.text.lower() == "goodbye.":
                         said_goodbye = True
