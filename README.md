@@ -1,4 +1,6 @@
 # openai_speechbot
+This is a simple chat bot with that uses webrtvad for voice recording, 
+OpenAI whisper transcription, ChatGPT, and ElevenLabs text-to-speech.
 
 ### Prerequisites:
 The following python packages must be installed:
