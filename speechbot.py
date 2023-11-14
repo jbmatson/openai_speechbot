@@ -31,7 +31,14 @@ SILENCE_LIMIT = 2               # Number of seconds of silence/non-speech before
 # Configure GPT parameters
 GPT_MODEL = "gpt-3.5-turbo"
 GPT_CHAT_TEMPERATURE = 0.7
+GPT_MAX_RESPONSE_COMPLETION_TOKENS = 10   # Limit length of GPT responses to this many
+                                        # completion_tokens to reduce chance of going
+                                        # over paid ElevenLabs character limit
 
+# configure ElevenLabs speech parameters
+VOICE = "Rachel"
+VOICE_MODEL = "eleven_multilingual_v2"
+VOICE_OUTPUT_ENABLED = False
 
 def main():
     """
@@ -73,6 +80,10 @@ def main():
     # Initialise variables for chat conversation
     said_goodbye: bool = False
     chat_messages = []   # the chat message history
+
+    chat_messages.append({"role": "system", "content": "You are a helpful assistant that keeps \
+                          responses to a maximum of " + str(GPT_MAX_RESPONSE_COMPLETION_TOKENS) + "\
+                            completion_tokens in length"})
 
     speak_string("assistant", "Hello, how can I help you?", chat_messages)
 
@@ -152,21 +163,22 @@ def speak_string(role: str, text: str, chat_messages):
 
     print(role + ": " + text)
 
-    try:
-        audio_stream = generate(
-            text = text,
-            voice = "Rachel",
-            model = "eleven_multilingual_v2",
-            stream=True
-        )
-        stream(audio_stream)
+    if VOICE_OUTPUT_ENABLED:
+        try:
+            audio_stream = generate(
+                text = text,
+                voice = VOICE,
+                model = VOICE_MODEL,
+                stream = True
+            )
+            stream(audio_stream)
 
-    except RateLimitError as e:
-        print("ElevenLabs rate limit error - " + e.message)
-    except AuthorizationError as e:
-        print("ElevenLabs authorization error - " + e.message)
-    except APIError as e:
-        print("ElevenLabs API error - " + e.message)
+        except RateLimitError as e:
+            print("ElevenLabs rate limit error - " + e.message)
+        except AuthorizationError as e:
+            print("ElevenLabs authorization error - " + e.message)
+        except APIError as e:
+            print("ElevenLabs API error - " + e.message)
 
 def save_audio_to_wave(wave_file_path, sample_width, audio_data):
     """
